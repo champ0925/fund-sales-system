@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Card, Row, Col } from 'antd'
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, Legend } from 'recharts'
 import axios from 'axios'
+import apiConfig from '../../utils/api'
 
 interface ProductTypeStat {
   name: string
@@ -13,7 +14,7 @@ export default function Dashboard() {
 
   const getStat = async () => {
     try {
-      const res = await axios.get('http://localhost:3000/api/dashboard/product-type')
+      const res = await axios.get(apiConfig.endpoints.dashboardProductType)
       // console.log('Dashboard统计数据响应:', res.data)
       setTypeData(res.data) 
     } catch (error) {

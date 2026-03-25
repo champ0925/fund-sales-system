@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react'
-import { Table, Button, Card, Tabs, Input, Modal, message, Popconfirm, Select, DatePicker } from 'antd'
-import { PlusOutlined, EditOutlined, DeleteOutlined, ReloadOutlined } from '@ant-design/icons'
+import { Table, Button, Card, Tabs, Input, Modal, message, Popconfirm, Select } from 'antd'
+import { PlusOutlined, DeleteOutlined, ReloadOutlined } from '@ant-design/icons'
 import axios from 'axios'
 import dayjs from 'dayjs'
+import apiConfig from '../../utils/api'
 
 const { Search } = Input
 const { Option } = Select
 const { TabPane } = Tabs
-const { RangePicker } = DatePicker
+// const { RangePicker } = DatePicker // 已注释
 
 // TypeScript 类型定义
 interface Customer {
@@ -112,7 +113,7 @@ export default function Customer() {
   // 获取客户列表
   const getList = async () => {
     try {
-      const res = await axios.get('http://localhost:3000/api/customers')
+      const res = await axios.get(apiConfig.endpoints.customers)
       setList(res.data)
       setFilteredList(res.data)
     } catch (error) {
@@ -123,7 +124,7 @@ export default function Customer() {
   // 获取所有产品列表（用于选择）
   const getAllProducts = async () => {
     try {
-      const res = await axios.get('http://localhost:3000/api/products')
+      const res = await axios.get(apiConfig.endpoints.products)
       setAllProducts(res.data)
     } catch (error) {
       console.error('获取产品列表失败:', error)
@@ -133,7 +134,7 @@ export default function Customer() {
   // 获取客户持有产品
   const getProducts = async (id: number) => {
     try {
-      const res = await axios.get(`http://localhost:3000/api/customers/${id}/products`)
+      const res = await axios.get(apiConfig.endpoints.customerProducts(id))
       setProducts(res.data)
     } catch (error) {
       console.error('获取客户产品失败:', error)
@@ -143,7 +144,7 @@ export default function Customer() {
   // 获取客户跟进记录
   const getFollows = async (id: number) => {
     try {
-      const res = await axios.get(`http://localhost:3000/api/follow/customer/${id}`)
+      const res = await axios.get(apiConfig.endpoints.followCustomer(id))
       setFollows(res.data)
     } catch (error) {
       console.error('获取客户跟进记录失败:', error)
@@ -190,7 +191,7 @@ export default function Customer() {
 
   const handleDeleteCustomer = async (id: number) => {
     try {
-      await axios.delete(`http://localhost:3000/api/customers/${id}`)
+      await axios.delete(`${apiConfig.endpoints.customers}/${id}`)
       message.success('删除成功')
       // 如果删除的是当前查看的客户，关闭详情
       if (currentId === id) {
@@ -207,7 +208,7 @@ export default function Customer() {
 
   const handleBatchDeleteCustomer = async () => {
     try {
-      await axios.post('http://localhost:3000/api/customers/batch-delete', {
+      await axios.post(apiConfig.endpoints.customerBatchDelete, {
         ids: selectedRowKeys
       })
       message.success('批量删除成功')
@@ -221,10 +222,10 @@ export default function Customer() {
   const handleSubmitCustomer = async () => {
     try {
       if (editingCustomerId) {
-        await axios.put(`http://localhost:3000/api/customers/${editingCustomerId}`, customerFormData)
+        await axios.put(`${apiConfig.endpoints.customers}/${editingCustomerId}`, customerFormData)
         message.success('编辑成功')
       } else {
-        await axios.post('http://localhost:3000/api/customers', customerFormData)
+        await axios.post(apiConfig.endpoints.customers, customerFormData)
         message.success('新增成功')
       }
       setCustomerModalVisible(false)
@@ -259,7 +260,7 @@ export default function Customer() {
 
   const handleDeleteHold = async (id: number) => {
     try {
-      await axios.delete(`http://localhost:3000/api/customer-hold/${id}`)
+      await axios.delete(apiConfig.endpoints.customerHoldDetail(id))
       message.success('删除成功')
       if (currentId) getProducts(currentId)
     } catch (error) {
@@ -269,7 +270,7 @@ export default function Customer() {
 
   const handleBatchDeleteHold = async () => {
     try {
-      await axios.post('http://localhost:3000/api/customer-hold/batch-delete', {
+      await axios.post(apiConfig.endpoints.customerHoldBatchDelete, {
         ids: selectedProductKeys
       })
       message.success('批量删除成功')
@@ -283,10 +284,10 @@ export default function Customer() {
   const handleSubmitHold = async () => {
     try {
       if (editingHoldId) {
-        await axios.put(`http://localhost:3000/api/customer-hold/${editingHoldId}`, holdFormData)
+        await axios.put(apiConfig.endpoints.customerHoldDetail(editingHoldId), holdFormData)
         message.success('编辑成功')
       } else {
-        await axios.post('http://localhost:3000/api/customer-hold', {
+        await axios.post(apiConfig.endpoints.customerHold, {
           customer_id: currentId,
           ...holdFormData
         })
@@ -326,7 +327,7 @@ export default function Customer() {
 
   const handleDeleteFollow = async (id: number) => {
     try {
-      await axios.delete(`http://localhost:3000/api/follow/${id}`)
+      await axios.delete(apiConfig.endpoints.followDetail(id))
       message.success('删除成功')
       if (currentId) getFollows(currentId)
     } catch (error) {
@@ -336,7 +337,7 @@ export default function Customer() {
 
   const handleBatchDeleteFollow = async () => {
     try {
-      await axios.post('http://localhost:3000/api/follow/batch-delete', {
+      await axios.post(apiConfig.endpoints.followBatchDelete, {
         ids: selectedFollowKeys
       })
       message.success('批量删除成功')
@@ -350,10 +351,10 @@ export default function Customer() {
   const handleSubmitFollow = async () => {
     try {
       if (editingFollowId) {
-        await axios.put(`http://localhost:3000/api/follow/${editingFollowId}`, followFormData)
+        await axios.put(apiConfig.endpoints.followDetail(editingFollowId), followFormData)
         message.success('编辑成功')
       } else {
-        await axios.post('http://localhost:3000/api/follow/add', {
+        await axios.post(apiConfig.endpoints.followAdd, {
           customer_id: currentId,
           ...followFormData
         })

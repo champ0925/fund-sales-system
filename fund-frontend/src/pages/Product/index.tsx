@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { Table, Input, Select, Card, Modal, Descriptions, Button, message, Popconfirm, Tag } from 'antd'
-import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons'
+import { PlusOutlined, DeleteOutlined } from '@ant-design/icons'
 import axios from 'axios'
+import apiConfig from '../../utils/api'
 
 const { Search } = Input
 const { Option } = Select
@@ -51,7 +52,7 @@ export default function Product() {
   // 获取产品列表
   const getProductList = async () => {
     try {
-      const res = await axios.get('http://localhost:3000/api/products')
+      const res = await axios.get(apiConfig.endpoints.products)
       // console.log('产品列表响应:', res.data)
       setProductList(res.data)
       setFilteredList(res.data)
@@ -129,7 +130,7 @@ export default function Product() {
   // 删除产品
   const handleDelete = async (id: number) => {
     try {
-      await axios.delete(`http://localhost:3000/api/products/${id}`)
+      await axios.delete(apiConfig.endpoints.productDetail(id))
       message.success('删除成功')
       getProductList()
     } catch (error) {
@@ -140,7 +141,7 @@ export default function Product() {
   // 批量删除
   const handleBatchDelete = async () => {
     try {
-      await axios.post('http://localhost:3000/api/products/batch-delete', {
+      await axios.post(apiConfig.endpoints.productBatchDelete, {
         ids: selectedRowKeys
       })
       message.success('批量删除成功')
@@ -156,11 +157,11 @@ export default function Product() {
     try {
       if (editingId) {
         // 编辑
-        await axios.put(`http://localhost:3000/api/products/${editingId}`, formData)
+        await axios.put(apiConfig.endpoints.productDetail(editingId), formData)
         message.success('编辑成功')
       } else {
         // 新增
-        await axios.post('http://localhost:3000/api/products', formData)
+        await axios.post(apiConfig.endpoints.products, formData)
         message.success('新增成功')
       }
       setModalVisible(false)

@@ -8,8 +8,19 @@ const mysql = require('mysql2/promise');
 const app = express();
 
 // 更详细的 CORS 配置
+const allowedOrigins = process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : ['http://localhost:5173'];
+
 app.use(cors({
-  origin: '*',
+  origin: function (origin, callback) {
+    // 允许没有origin的请求（如移动应用或Postman）
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
@@ -116,7 +127,7 @@ app.post('/api/products/batch-delete', async (req, res) => {
   }
 });
 
-// 健康检查接口
+// 健康检查接口  
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });

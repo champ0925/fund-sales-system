@@ -7,3 +7,5 @@ pymysql
 sqlalchemy
 langchain-community
 dashscope
+pandas
+python-multipart

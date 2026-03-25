@@ -1,0 +1,26 @@
+{
+  "id": 55288,
+  "name": "fund-sales-system",
+  "abbrName": "FU",
+  "description": "",
+  "devMode": 2,
+  "status": null,
+  "url": null,
+  "databaseHost": null,
+  "databasePort": null,
+  "databaseName": null,
+  "databaseUsername": null,
+  "databasePassword": null,
+  "projectInfo": {
+    "JD": {
+      "jd_AjptpoueoFlU": [
+        {
+          "jd_AjptpoueoFlU": {
+            "projectId": 55288,
+            "appId": "24374"
+          }
+        }
+      ]
+    }
+  }
+}
