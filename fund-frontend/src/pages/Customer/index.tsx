@@ -8,7 +8,17 @@ import apiConfig from '../../utils/api'
 const { Search } = Input
 const { Option } = Select
 const { TabPane } = Tabs
-// const { RangePicker } = DatePicker // 已注释
+
+// 检测是否为移动端（备用方案）
+const useIsMobile = () => {
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768)
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+  return isMobile
+}
 
 // TypeScript 类型定义
 interface Customer {
@@ -65,6 +75,7 @@ interface FollowFormData {
 }
 
 export default function Customer() {
+  const isMobile = useIsMobile()
   const [list, setList] = useState<Customer[]>([])
   const [filteredList, setFilteredList] = useState<Customer[]>([])
   const [allProducts, setAllProducts] = useState<AllProduct[]>([])
@@ -368,74 +379,115 @@ export default function Customer() {
   }
 
   // 表格列
-  const customerColumns = [
-    { title: '客户姓名', dataIndex: 'customer_name' },
-    { title: '电话', dataIndex: 'phone' },
-    { title: '公司', dataIndex: 'company' },
-    { title: '状态', dataIndex: 'customer_status' },
-    {
-      title: '操作',
-      render: (_: any, record: Customer) => (
-        <>
-          <Button
-            type="primary"
-            size="small"
-            onClick={() => {
-              setCurrentId(record.id)
-              setCurrentCustomerName(record.customer_name)
-              getProducts(record.id)
-              getFollows(record.id)
-            }}
-            style={{ marginRight: 8 }}
-          >
-            详情
-          </Button>
-          <Button size="small" onClick={() => handleEditCustomer(record)} style={{ marginRight: 8 }}>
-            编辑
-          </Button>
-          <Popconfirm title="确定删除该客户?" onConfirm={() => handleDeleteCustomer(record.id)} okText="确定" cancelText="取消">
-            <Button size="small" danger>删除</Button>
-          </Popconfirm>
-        </>
-      )
-    }
-  ]
+  const customerColumns = isMobile
+    ? [
+        { title: '客户', dataIndex: 'customer_name', render: (text: string, record: Customer) => `${text} (${record.phone})` },
+        { title: '状态', dataIndex: 'customer_status' },
+        {
+          title: '操作',
+          width: 100,
+          render: (_: any, record: Customer) => (
+            <Button
+              type="link"
+              size="small"
+              onClick={() => {
+                setCurrentId(record.id)
+                setCurrentCustomerName(record.customer_name)
+                getProducts(record.id)
+                getFollows(record.id)
+              }}
+            >
+              详情
+            </Button>
+          )
+        }
+      ]
+    : [
+        { title: '客户姓名', dataIndex: 'customer_name' },
+        { title: '电话', dataIndex: 'phone' },
+        { title: '公司', dataIndex: 'company' },
+        { title: '状态', dataIndex: 'customer_status' },
+        {
+          title: '操作',
+          render: (_: any, record: Customer) => (
+            <>
+              <Button
+                type="primary"
+                size="small"
+                onClick={() => {
+                  setCurrentId(record.id)
+                  setCurrentCustomerName(record.customer_name)
+                  getProducts(record.id)
+                  getFollows(record.id)
+                }}
+                style={{ marginRight: 8 }}
+              >
+                详情
+              </Button>
+              <Button size="small" onClick={() => handleEditCustomer(record)} style={{ marginRight: 8 }}>
+                编辑
+              </Button>
+              <Popconfirm title="确定删除该客户?" onConfirm={() => handleDeleteCustomer(record.id)} okText="确定" cancelText="取消">
+                <Button size="small" danger>删除</Button>
+              </Popconfirm>
+            </>
+          )
+        }
+      ]
 
-  const holdColumns = [
-    { title: '产品名称', dataIndex: 'product_name' },
-    { title: '类型', dataIndex: 'product_type' },
-    { title: '持有金额(万)', dataIndex: 'hold_amount' },
-    { title: '购买时间', dataIndex: 'buy_time', render: (text: string) => text ? text.split('T')[0] : '-' },
-    {
-      title: '操作',
-      render: (_: any, record: Product) => (
-        <>
-          <a onClick={() => handleEditHold(record)} style={{ marginRight: 8 }}>编辑</a>
-          <Popconfirm title="确定删除?" onConfirm={() => handleDeleteHold(record.id)} okText="确定" cancelText="取消">
-            <a style={{ color: 'red' }}>删除</a>
-          </Popconfirm>
-        </>
-      )
-    }
-  ]
+  const holdColumns = isMobile
+    ? [
+        { title: '产品', dataIndex: 'product_name', ellipsis: true },
+        { title: '金额', dataIndex: 'hold_amount' },
+        {
+          title: '操作',
+          width: 60,
+          render: (_: any, record: Product) => (
+            <Button type="link" size="small" danger onClick={() => handleDeleteHold(record.id)}>删</Button>
+          )
+        }
+      ]
+    : [
+        { title: '产品名称', dataIndex: 'product_name' },
+        { title: '类型', dataIndex: 'product_type' },
+        { title: '持有金额(万)', dataIndex: 'hold_amount' },
+        { title: '购买时间', dataIndex: 'buy_time', render: (text: string) => text ? text.split('T')[0] : '-' },
+        {
+          title: '操作',
+          render: (_: any, record: Product) => (
+            <>
+              <a onClick={() => handleEditHold(record)} style={{ marginRight: 8 }}>编辑</a>
+              <Popconfirm title="确定删除?" onConfirm={() => handleDeleteHold(record.id)} okText="确定" cancelText="取消">
+                <a style={{ color: 'red' }}>删除</a>
+              </Popconfirm>
+            </>
+          )
+        }
+      ]
 
-  const followColumns = [
-    { title: '方式', dataIndex: 'follow_way' },
-    { title: '内容', dataIndex: 'follow_content', ellipsis: true },
-    { title: '时间', dataIndex: 'follow_time', render: (text: string) => text ? text.split('T')[0] : '-' },
-    { title: '下次计划', dataIndex: 'next_plan', ellipsis: true },
-    {
-      title: '操作',
-      render: (_: any, record: Follow) => (
-        <>
-          <a onClick={() => handleEditFollow(record)} style={{ marginRight: 8 }}>编辑</a>
-          <Popconfirm title="确定删除?" onConfirm={() => handleDeleteFollow(record.id)} okText="确定" cancelText="取消">
-            <a style={{ color: 'red' }}>删除</a>
-          </Popconfirm>
-        </>
-      )
-    }
-  ]
+  const followColumns = isMobile
+    ? [
+        { title: '方式', dataIndex: 'follow_way', width: 60 },
+        { title: '内容', dataIndex: 'follow_content', ellipsis: true },
+        { title: '时间', dataIndex: 'follow_time', render: (text: string) => text ? text.split('T')[0] : '-', width: 80 },
+      ]
+    : [
+        { title: '方式', dataIndex: 'follow_way' },
+        { title: '内容', dataIndex: 'follow_content', ellipsis: true },
+        { title: '时间', dataIndex: 'follow_time', render: (text: string) => text ? text.split('T')[0] : '-' },
+        { title: '下次计划', dataIndex: 'next_plan', ellipsis: true },
+        {
+          title: '操作',
+          render: (_: any, record: Follow) => (
+            <>
+              <a onClick={() => handleEditFollow(record)} style={{ marginRight: 8 }}>编辑</a>
+              <Popconfirm title="确定删除?" onConfirm={() => handleDeleteFollow(record.id)} okText="确定" cancelText="取消">
+                <a style={{ color: 'red' }}>删除</a>
+              </Popconfirm>
+            </>
+          )
+        }
+      ]
 
   const rowSelection = { selectedRowKeys, onChange: (keys: React.Key[]) => setSelectedRowKeys(keys) }
   const productRowSelection = { selectedRowKeys: selectedProductKeys, onChange: (keys: React.Key[]) => setSelectedProductKeys(keys) }
@@ -444,10 +496,10 @@ export default function Customer() {
   return (
     <Card title="客户管理">
       {/* 搜索 + 操作栏 */}
-      <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
-        <Search placeholder="搜索客户姓名/公司" style={{ width: 250 }} onSearch={handleSearch} />
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
+        <Search placeholder="搜索客户" style={{ minWidth: isMobile ? '100%' : 200 }} onSearch={handleSearch} />
         <Button icon={<ReloadOutlined />} onClick={() => getList()}>刷新</Button>
-        <Button type="primary" icon={<PlusOutlined />} onClick={handleAddCustomer}>新增客户</Button>
+        <Button type="primary" icon={<PlusOutlined />} onClick={handleAddCustomer}>新增</Button>
         <Popconfirm title="确定删除选中的客户?" onConfirm={handleBatchDeleteCustomer} okText="确定" cancelText="取消" disabled={selectedRowKeys.length === 0}>
           <Button danger icon={<DeleteOutlined />} disabled={selectedRowKeys.length === 0}>批量删除 ({selectedRowKeys.length})</Button>
         </Popconfirm>
@@ -484,7 +536,7 @@ export default function Customer() {
       )}
 
       {/* 客户表单弹窗 */}
-      <Modal title={customerModalTitle} open={customerModalVisible} onCancel={() => setCustomerModalVisible(false)} onOk={handleSubmitCustomer} width={500}>
+      <Modal title={customerModalTitle} open={customerModalVisible} onCancel={() => setCustomerModalVisible(false)} onOk={handleSubmitCustomer} width={isMobile ? '90%' : 500}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div>
             <label>客户姓名：</label>
@@ -510,7 +562,7 @@ export default function Customer() {
       </Modal>
 
       {/* 持有产品表单弹窗 */}
-      <Modal title={holdModalTitle} open={holdModalVisible} onCancel={() => setHoldModalVisible(false)} onOk={handleSubmitHold} width={500}>
+      <Modal title={holdModalTitle} open={holdModalVisible} onCancel={() => setHoldModalVisible(false)} onOk={handleSubmitHold} width={isMobile ? '90%' : 500}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div>
             <label>选择产品：</label>
@@ -530,7 +582,7 @@ export default function Customer() {
       </Modal>
 
       {/* 跟进记录表单弹窗 */}
-      <Modal title={followModalTitle} open={followModalVisible} onCancel={() => setFollowModalVisible(false)} onOk={handleSubmitFollow} width={500}>
+      <Modal title={followModalTitle} open={followModalVisible} onCancel={() => setFollowModalVisible(false)} onOk={handleSubmitFollow} width={isMobile ? '90%' : 500}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div>
             <label>跟进方式：</label>

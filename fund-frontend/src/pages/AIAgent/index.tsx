@@ -1,9 +1,20 @@
 import { useState, useRef, useEffect } from 'react'
 import { Card, Input, Button, List, Typography, Spin } from 'antd'
 import { MessageOutlined, SendOutlined, LoadingOutlined, DeleteOutlined } from '@ant-design/icons'
-import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, Legend, LineChart, Line, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from 'recharts'
+import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, Legend, LineChart, Line, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from 'recharts'
 
 const { Paragraph } = Typography
+
+// 检测是否为移动端
+const useIsMobile = () => {
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768)
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+  return isMobile
+}
 
 interface ChartData {
   type: 'pie' | 'bar' | 'line' | 'radar'
@@ -45,67 +56,76 @@ const DEFAULT_WELCOME: Message = {
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d']
 
-function ChartRenderer({ chart }: { chart: ChartData }) {
+function ChartRenderer({ chart, isMobile }: { chart: ChartData; isMobile?: boolean }) {
   const data = chart.data.map(item => ({
     name: item.name || '未知',
     value: Number(item.value) || 0
   }))
 
-  const chartWidth = 400
-  const chartHeight = 250
+  const chartWidth = isMobile ? 280 : 400
+  const chartHeight = isMobile ? 180 : 250
+  const labelFontSize = isMobile ? 10 : 12
 
   if (chart.type === 'pie') {
     return (
-      <PieChart width={chartWidth} height={chartHeight}>
-        <Pie
-          data={data}
-          cx="50%"
-          cy="50%"
-          labelLine={false}
-          label={({ name, percent }) => `${name}: ${((percent || 0) * 100).toFixed(0)}%`}
-          dataKey="value"
-        >
-          {data.map((_, index) => (
-            <Cell key={index} fill={COLORS[index % COLORS.length]} />
-          ))}
-        </Pie>
-        <Legend />
-        <Tooltip formatter={(value) => [`${value}`, '数值']} />
-      </PieChart>
+      <ResponsiveContainer width="100%" height={chartHeight}>
+        <PieChart>
+          <Pie
+            data={data}
+            cx="50%"
+            cy="50%"
+            labelLine={false}
+            label={!isMobile ? ({ name, percent }) => `${name}: ${((percent || 0) * 100).toFixed(0)}%` : undefined}
+            dataKey="value"
+          >
+            {data.map((_, index) => (
+              <Cell key={index} fill={COLORS[index % COLORS.length]} />
+            ))}
+          </Pie>
+          <Legend formatter={(value) => isMobile ? value.substring(0, 3) : value} />
+          <Tooltip formatter={(value) => [`${value}`, '数值']} />
+        </PieChart>
+      </ResponsiveContainer>
     )
   }
 
   if (chart.type === 'bar') {
     return (
-      <BarChart width={chartWidth} height={chartHeight} data={data}>
-        <XAxis dataKey="name" />
-        <YAxis />
-        <Tooltip formatter={(value) => [`${value}`, '数值']} />
-        <Bar dataKey="value" fill="#0088FE" name="数值" />
-      </BarChart>
+      <ResponsiveContainer width="100%" height={chartHeight}>
+        <BarChart data={data}>
+          <XAxis dataKey="name" fontSize={labelFontSize} />
+          <YAxis fontSize={labelFontSize} />
+          <Tooltip formatter={(value) => [`${value}`, '数值']} />
+          <Bar dataKey="value" fill="#0088FE" name="数值" />
+        </BarChart>
+      </ResponsiveContainer>
     )
   }
 
   if (chart.type === 'line') {
     return (
-      <LineChart width={chartWidth} height={chartHeight} data={data}>
-        <XAxis dataKey="name" />
-        <YAxis />
-        <Tooltip formatter={(value) => [`${value}`, '数值']} />
-        <Line type="monotone" dataKey="value" stroke="#0088FE" name="数值" />
-      </LineChart>
+      <ResponsiveContainer width="100%" height={chartHeight}>
+        <LineChart data={data}>
+          <XAxis dataKey="name" fontSize={labelFontSize} />
+          <YAxis fontSize={labelFontSize} />
+          <Tooltip formatter={(value) => [`${value}`, '数值']} />
+          <Line type="monotone" dataKey="value" stroke="#0088FE" name="数值" />
+        </LineChart>
+      </ResponsiveContainer>
     )
   }
 
   if (chart.type === 'radar') {
     return (
-      <RadarChart cx="50%" cy="50%" outerRadius="80%" width={chartWidth} height={chartHeight} data={data}>
-        <PolarGrid />
-        <PolarAngleAxis dataKey="name" />
-        <PolarRadiusAxis angle={30} domain={[0, 'auto']} />
-        <Radar name="数值" dataKey="value" stroke="#0088FE" fill="#0088FE" fillOpacity={0.6} />
-        <Tooltip formatter={(value) => [`${value}`, '数值']} />
-      </RadarChart>
+      <ResponsiveContainer width="100%" height={chartHeight}>
+        <RadarChart cx="50%" cy="50%" outerRadius="80%" data={data}>
+          <PolarGrid />
+          <PolarAngleAxis dataKey="name" fontSize={labelFontSize} />
+          <PolarRadiusAxis angle={30} domain={[0, 'auto']} />
+          <Radar name="数值" dataKey="value" stroke="#0088FE" fill="#0088FE" fillOpacity={0.6} />
+          <Tooltip formatter={(value) => [`${value}`, '数值']} />
+        </RadarChart>
+      </ResponsiveContainer>
     )
   }
 
@@ -113,6 +133,7 @@ function ChartRenderer({ chart }: { chart: ChartData }) {
 }
 
 export default function AIAgent() {
+  const isMobile = useIsMobile()
   const [messages, setMessages] = useState<Message[]>(() => {
     const saved = localStorage.getItem(STORAGE_KEY)
     if (saved) {
@@ -308,7 +329,7 @@ export default function AIAgent() {
       style={{ height: '100%' }}
     >
       <div style={{
-        height: '500px',
+        height: isMobile ? 'calc(100vh - 200px)' : '500px',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between'
@@ -317,35 +338,35 @@ export default function AIAgent() {
           ref={listRef}
           itemLayout="vertical"
           dataSource={messages}
-          style={{ overflowY: 'auto', marginBottom: 16, maxHeight: 420 }}
+          style={{ overflowY: 'auto', marginBottom: 16, maxHeight: isMobile ? 'calc(100% - 60px)' : 420 }}
           renderItem={(item) => (
             <List.Item style={{ textAlign: item.type === 'user' ? 'right' : 'left' }}>
               {item.type === 'loading' || item.type === 'thinking' ? (
                 <Card
                   size="small"
                   style={{
-                    maxWidth: '70%',
+                    maxWidth: isMobile ? '85%' : '70%',
                     display: 'inline-block',
                     background: '#f5f5f5'
                   }}
                 >
-                  <Spin indicator={<LoadingOutlined style={{ fontSize: 18 }} spin />} />
-                  <span style={{ marginLeft: 8 }}>{item.content || '正在思考...'}</span>
+                  <Spin indicator={<LoadingOutlined style={{ fontSize: isMobile ? 14 : 18 }} spin />} />
+                  <span style={{ marginLeft: 8, fontSize: isMobile ? 12 : 14 }}>{item.content || '正在思考...'}</span>
                 </Card>
               ) : (
                 <Card
                   size="small"
                   style={{
-                    maxWidth: '70%',
+                    maxWidth: isMobile ? '85%' : '70%',
                     display: 'inline-block',
                     background: item.type === 'user' ? '#e6f7ff' : '#f5f5f5'
                   }}
                 >
-                  <Paragraph style={{ whiteSpace: 'pre-wrap' }}>{item.content}</Paragraph>
+                  <Paragraph style={{ whiteSpace: 'pre-wrap', marginBottom: 0, fontSize: isMobile ? 12 : 14 }}>{item.content}</Paragraph>
                   {item.chart && (
                     <div style={{ marginTop: 16 }}>
-                      <h4 style={{ marginBottom: 8 }}>{item.chart.title}</h4>
-                      <ChartRenderer chart={item.chart} />
+                      <h4 style={{ marginBottom: 8, fontSize: isMobile ? 12 : 14 }}>{item.chart.title}</h4>
+                      <ChartRenderer chart={item.chart} isMobile={isMobile} />
                     </div>
                   )}
                 </Card>
@@ -354,13 +375,14 @@ export default function AIAgent() {
           )}
         />
 
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="输入你的问题..."
             onPressEnter={sendQuestion}
             disabled={loading}
+            style={{ flex: 1, minWidth: isMobile ? '100%' : 'auto' }}
           />
           <Button type="primary" icon={<SendOutlined />} onClick={sendQuestion} loading={loading}>
             发送

@@ -7,6 +7,17 @@ import apiConfig from '../../utils/api'
 const { Search } = Input
 const { Option } = Select
 
+// 检测是否为移动端
+const useIsMobile = () => {
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768)
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+  return isMobile
+}
+
 // TypeScript 类型定义
 interface ProductItem {
   id: number
@@ -28,6 +39,7 @@ interface FormData {
 }
 
 export default function Product() {
+  const isMobile = useIsMobile()
   // 泛型约束类型
   const [productList, setProductList] = useState<ProductItem[]>([])
   const [filteredList, setFilteredList] = useState<ProductItem[]>([])
@@ -194,25 +206,38 @@ export default function Product() {
   }
 
   // 表格列
-  const columns = [
-    { title: '产品名称', dataIndex: 'product_name', key: 'product_name' },
-    { title: '产品类型', dataIndex: 'product_type', key: 'product_type' },
-    { title: '最新净值', dataIndex: 'latest_nav', key: 'latest_nav' },
-    { title: '成立规模(万)', dataIndex: 'establish_scale', key: 'establish_scale' },
-    { title: '产品状态', dataIndex: 'product_status', key: 'product_status', render: (status: string) => getStatusTag(status) },
-    {
-      title: '操作',
-      render: (_: any, record: ProductItem) => (
-        <>
-          <a onClick={() => showDetail(record)} style={{ marginRight: 8 }}>详情</a>
-          <a onClick={() => handleEdit(record)} style={{ marginRight: 8 }}>编辑</a>
-          <Popconfirm title="确定删除该产品?" onConfirm={() => handleDelete(record.id)} okText="确定" cancelText="取消">
-            <a style={{ color: 'red' }}>删除</a>
-          </Popconfirm>
-        </>
-      )
-    }
-  ]
+  const columns = isMobile
+    ? [
+        { title: '产品', dataIndex: 'product_name', key: 'product_name', ellipsis: true },
+        { title: '类型', dataIndex: 'product_type', key: 'product_type', width: 60 },
+        { title: '状态', dataIndex: 'product_status', key: 'product_status', render: (status: string) => getStatusTag(status), width: 70 },
+        {
+          title: '操作',
+          width: 60,
+          render: (_: any, record: ProductItem) => (
+            <Button type="link" size="small" onClick={() => showDetail(record)}>详情</Button>
+          )
+        }
+      ]
+    : [
+        { title: '产品名称', dataIndex: 'product_name', key: 'product_name' },
+        { title: '产品类型', dataIndex: 'product_type', key: 'product_type' },
+        { title: '最新净值', dataIndex: 'latest_nav', key: 'latest_nav' },
+        { title: '成立规模(万)', dataIndex: 'establish_scale', key: 'establish_scale' },
+        { title: '产品状态', dataIndex: 'product_status', key: 'product_status', render: (status: string) => getStatusTag(status) },
+        {
+          title: '操作',
+          render: (_: any, record: ProductItem) => (
+            <>
+              <a onClick={() => showDetail(record)} style={{ marginRight: 8 }}>详情</a>
+              <a onClick={() => handleEdit(record)} style={{ marginRight: 8 }}>编辑</a>
+              <Popconfirm title="确定删除该产品?" onConfirm={() => handleDelete(record.id)} okText="确定" cancelText="取消">
+                <a style={{ color: 'red' }}>删除</a>
+              </Popconfirm>
+            </>
+          )
+        }
+      ]
 
   // 行选择配置
   const rowSelection = {
@@ -223,16 +248,16 @@ export default function Product() {
   return (
     <Card title="基金产品货架">
       {/* 搜索 + 筛选栏 */}
-      <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
         <Search
-          placeholder="搜索产品名称"
-          style={{ width: 250 }}
+          placeholder="搜索产品"
+          style={{ minWidth: isMobile ? '100%' : 200 }}
           onSearch={handleSearch}
         />
 
         <Select
-          placeholder="按产品类型筛选"
-          style={{ width: 180 }}
+          placeholder="类型筛选"
+          style={{ minWidth: isMobile ? '48%' : 140 }}
           allowClear
           onChange={handleTypeChange}
         >
@@ -243,8 +268,8 @@ export default function Product() {
         </Select>
 
         <Select
-          placeholder="按产品状态筛选"
-          style={{ width: 180 }}
+          placeholder="状态筛选"
+          style={{ minWidth: isMobile ? '48%' : 140 }}
           allowClear
           onChange={handleStatusChange}
         >
@@ -254,7 +279,7 @@ export default function Product() {
         </Select>
 
         <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
-          新增产品
+          新增
         </Button>
 
         <Popconfirm title="确定删除选中的产品?" onConfirm={handleBatchDelete} okText="确定" cancelText="取消" disabled={selectedRowKeys.length === 0}>
@@ -279,7 +304,7 @@ export default function Product() {
         open={visible}
         onCancel={() => setVisible(false)}
         footer={null}
-        width={600}
+        width={isMobile ? '90%' : 600}
       >
         {current && (
           <Descriptions column={1}>
@@ -299,7 +324,7 @@ export default function Product() {
         open={modalVisible}
         onCancel={() => setModalVisible(false)}
         onOk={handleSubmit}
-        width={500}
+        width={isMobile ? '90%' : 500}
       >
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div>
