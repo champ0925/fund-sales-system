@@ -144,6 +144,13 @@ INSERT INTO products (product_name, product_type, latest_nav, ...) VALUES (...)
 - ❌ **放弃采纳**：AI 生成的 SQL 可能有注入风险
 - **改为**：使用正则表达式手动解析关键字段，确保安全
 
+```python
+info = {
+    "product_name": re.search(r"产品名称[是为：:]\s*([^\s，。]+)", question),
+    ...
+}
+```
+
 四. 自我复盘
 
 4.1 已知的待修复问题
