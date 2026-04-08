@@ -36,7 +36,7 @@ for key, value in rag_configs.items():
 print("\n🔧 测试模块配置加载:")
 
 # 测试文本分块器配置
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from src.rag.text_splitter import get_default_splitter
 
 splitter = get_default_splitter()

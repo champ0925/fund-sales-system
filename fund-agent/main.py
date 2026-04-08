@@ -103,7 +103,7 @@ async def generate_stream(question: str):
         from src.rag.chain import is_rag_question, rag_stream
 
         # 数据库表相关关键词 - 这些问题走SQL查询，不走RAG
-        db_keywords = ["产品", "客户", "持仓", "跟进", "销售额", "业绩", "公司", "姓名", "电话", "运作", "募集", "清盘", "基金"]
+        db_keywords = ["产品", "客户", "持仓", "跟进", "销售额", "业绩", "公司", "姓名", "电话", "运作", "募集", "清盘"]
 
         print(f"[DEBUG] 问题: {question}")
         print(f"[DEBUG] RAG知识库路径: {RAG_KNOWLEDGE_PATH}, 存在: {os.path.exists(RAG_KNOWLEDGE_PATH)}")

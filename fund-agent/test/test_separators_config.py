@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 # 加载环境变量
 load_dotenv()
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 def test_separators():
     """测试不同分隔符配置的效果"""
